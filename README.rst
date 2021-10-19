@@ -75,3 +75,56 @@ Getting Started
     When you want to test the template rendering, but not actually install anything, you can use:
         - $ helm install --debug --dry-run goodly-guppy ./mychart
         This will render the templates. But instead of installing the chart, it will return the rendered template to you so you can see the output
+
+
+Built-in Objects - Objects are passed into a template from the template engine.
+^^^^^^^^^^^^^^^^^
+
+Values Files
+^^^^^^^^^^^^^^^
+
+One of the built-in objects is Values. This object provides access to values passed into the chart. Its contents come from multiple sources:
+
+    - The values.yaml file in the chart
+    - If this is a subchart, the values.yaml file of a parent chart
+    - A values file if passed into helm install or helm upgrade with the -f flag (helm install -f myvals.yaml ./mychart)
+    - Individual parameters passed with --set (such as helm install --set foo=bar ./mychart)
+
+1. Let's edit mychart/values.yaml and then edit our ConfigMap template.
+    removeing the defaults in values.yaml and send just one parameters
+        - favoriteDrink: coffee
+    Now we can use this inside of a template:
+
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+            name: {{ .Release.Name }}-configmap
+        data:
+            myvalue: "Hello World"
+            drink: {{ .Values.favoriteDrink }}
+
+    We expected to render it:
+        - $ helm install geared-marsupi ./mychart --dry-run --debug
+    
+    Because favoriteDrink is set in the default values.yaml file to coffee, that's the value displayed in the template.
+    We can easily override that by adding a --set flag in our call to helm install:
+        - $ helm install solid-vulture ./mychart --dry-run --debug --set favoriteDrink=slurm
+        We expected to see in our data - slurm. Since --set has a higher precedence than the default values.yaml file, our template generates drink: slurm.
+    
+    Values files can contain more structured content, too. For example, we could create a favorite section in our values.yaml file, and then add several keys there:
+        favorite:
+            drink: coffee
+            food: pizza
+    And now we would have to modify the template slightly:
+        apiVersion: v1
+            kind: ConfigMap
+            metadata:
+                name: {{ .Release.Name }}-configmap
+            data:
+            myvalue: "Hello World"
+                drink: {{ .Values.favorite.drink }}
+                food: {{ .Values.favorite.food }}
+
+2. Deleting a default key
+    - If you need to delete a key from the default values, you may override the value of the key to be null,
+    in which case Helm will remove the key from the overridden values merge.
