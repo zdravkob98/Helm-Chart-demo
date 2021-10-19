@@ -58,4 +58,20 @@ Getting Started
         - $ helm get manifest full-coral
     
     Now we can uninstall our release: 
-        - $ helm uninstall full-coral.
+        - $ helm uninstall full-coral
+
+3. Adding a Simple Template Call - Hard-coding the name: into a resource is usually considered to be bad practice. 
+    Names should be unique to a release. So we might want to generate a name field by inserting the release name.
+
+    Let's alter configmap.yaml accordingly.
+        name field now is: {{ .Release.Name }}-configmap.
+
+    Now when we install our resource, we'll immediately see the result of using this template directive:
+        - $ helm install clunky-serval ./mychart
+    
+    You can run this command to see the entire generated YAML.
+        - $ helm get manifest clunky-serval 
+
+    When you want to test the template rendering, but not actually install anything, you can use:
+        - $ helm install --debug --dry-run goodly-guppy ./mychart
+        This will render the templates. But instead of installing the chart, it will return the rendered template to you so you can see the output
