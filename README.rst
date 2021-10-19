@@ -1,5 +1,5 @@
 Helm
-=============
+^^^^^^
 
 1. Install Help
     - choco install kubernetes-helm (For windows 10)
@@ -33,3 +33,17 @@ So one chart can be installed multiple times into the same cluster. And each can
     If the flag --keep-history is provided, release history will be kept. You will be able to request information about that release:
     - $ helm status mysql-1612624192
     Because Helm tracks your releases even after you've uninstalled them, you can audit a cluster's history, and even undelete a release (with helm rollback).
+===================================================================================================================================================================
+
+Getting Started
+^^^^^^^^^^^^^^^^^^
+
+1. A Starter Chart - we'll create a simple chart
+    - $ helm create mychart
+    Expected to looks like this:
+        mychart/
+            Chart.yaml
+            values.yaml
+            charts/
+            templates/
+            ...
