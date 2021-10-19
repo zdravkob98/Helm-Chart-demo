@@ -47,3 +47,15 @@ Getting Started
             charts/
             templates/
             ...
+
+2. A First Template - The first template we are going to create will be a ConfigMap.
+    In Kubernetes, a ConfigMap is simply an object for storing configuration data. Other things, like pods, can access the data in a ConfigMap.
+
+    With this simple template, we now have an installable chart. And we can install it like this:
+        - $ helm install full-coral ./mychart
+    
+    Using Helm, we can retrieve the release and see the actual template that was loaded.
+        - $ helm get manifest full-coral
+    
+    Now we can uninstall our release: 
+        - $ helm uninstall full-coral.
