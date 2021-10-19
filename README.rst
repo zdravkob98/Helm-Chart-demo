@@ -128,3 +128,80 @@ One of the built-in objects is Values. This object provides access to values pas
 2. Deleting a default key
     - If you need to delete a key from the default values, you may override the value of the key to be null,
     in which case Helm will remove the key from the overridden values merge.
+
+
+Template Functions and Pipelines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. When injecting strings from the .Values object into the template, we ought to quote these strings.
+    We can do that by calling the quote function in the template directive:
+
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+            name: {{ .Release.Name }}-configmap
+        data:
+            myvalue: "Hello World"
+            drink: {{ quote .Values.favorite.drink }}
+            food: {{ quote .Values.favorite.food }}
+
+    Template functions follow the syntax functionName arg1 arg2.... 
+    In the snippet above, quote .Values.favorite.drink calls the quote function and passes it a single argument.
+
+
+2. Pipelines - Let's rewrite the above example using a pipeline.
+
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+        name: {{ .Release.Name }}-configmap
+    data:
+        myvalue: "Hello World"
+        drink: {{ .Values.favorite.drink | quote }}
+        food: {{ .Values.favorite.food | quote }}
+    
+    In this example, instead of calling quote ARGUMENT, we inverted the order.
+    We "sent" the argument to the function using a pipeline (|): .Values.favorite.drink | quote.
+    Using pipelines, we can chain several functions together:
+
+    Note that our original pizza has now been transformed to "PIZZA".
+
+    - The next example use repeat func
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+        name: {{ .Release.Name }}-configmap
+    data:
+        myvalue: "Hello World"
+        drink: {{ .Values.favorite.drink | repeat 5 | quote }}
+        food: {{ .Values.favorite.food | upper | quote }}
+    
+    - We expect to recieve drink: "coffeecoffeecoffeecoffeecoffee"
+
+
+3. Using the default function - we can pass the default value:
+    drink: {{ .Values.favorite.drink | default "tea" | quote }}
+
+    If we run this as normal, we'll get our coffee
+
+    Now, we will remove the favorite drink setting from values.yaml:
+    favorite:
+        #drink: coffee
+        food: pizza
+
+    Now re-running helm install --dry-run --debug fair-worm ./mychart will produce this YAML:
+        # Source: mychart/templates/configmap.yaml
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+            name: fair-worm-configmap
+        data:
+            myvalue: "Hello World"
+            drink: "tea"
+            food: "PIZZA"
+
+4. Using the lookup function - The lookup function can be used to look up resources in a running cluster.
+    The synopsis of the lookup function is lookup apiVersion, kind, namespace, name -> resource or resource list.
+
+5. Operators are functions - For templates, the operators (eq, ne, lt, gt, and, or and so on) are all implemented as functions. In pipelines,
+    operations can be grouped with parentheses ((, and )).
