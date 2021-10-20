@@ -205,3 +205,95 @@ Template Functions and Pipelines
 
 5. Operators are functions - For templates, the operators (eq, ne, lt, gt, and, or and so on) are all implemented as functions. In pipelines,
     operations can be grouped with parentheses ((, and )).
+
+
+Template Function List
+^^^^^^^^^^^^^^^^^^^^^^^^
+    https://helm.sh/docs/chart_template_guide/function_list/
+
+Flow Control
+^^^^^^^^^^^^^^
+Control structures (called "actions" in template parlance) provide you, the template author, with the ability to control the flow of a template's generation.
+    Helm's template language provides the following control structures:
+        - if/else for creating conditional blocks
+        - with to specify a scope
+        - range, which provides a "for each"-style loop
+    https://helm.sh/docs/chart_template_guide/control_structures/
+
+    1. Example with if: 
+        - in configmap.yaml:
+            {{ if eq .Values.favorite.drink "coffee" }}mug: "true"{{ end }}
+        - expected:
+
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+            name: eyewitness-elk-configmap
+        data:
+            myvalue: "Hello World"
+            drink: "coffee"
+            food: "PIZZA"
+            mug: "true"
+
+    2. Example with "with" (allow you to set the current scope):
+        - in configmap.yaml from this:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+                name: {{ .Release.Name }}-configmap
+            data:
+                myvalue: "Hello World"
+                drink: {{ .Values.favorite.drink | default "tea" | quote }}
+                food: {{ .Values.favorite.food | upper | quote }}
+                {{ if eq .Values.favorite.drink "coffee" }}
+                mug: "true"
+                {{ end }}
+        - to this:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+                name: {{ .Release.Name }}-configmap
+            data:
+                myvalue: "Hello World"
+                {{- with .Values.favorite }}
+                drink: {{ .drink | default "tea" | quote }}
+                food: {{ .food | upper | quote }}
+                {{- end }}
+        Important to know that {{- remove the new line to -}}
+    
+    3. Looping with the range action
+        - in values.yaml we add:
+            favorite:
+                drink: coffee
+                food: pizza
+            pizzaToppings:
+                - mushrooms
+                - cheese
+                - peppers
+                - onions
+
+        - in configmap.yaml we make a loop:
+            toppings: |-
+                {{- range .Values.pizzaToppings }}
+                - {{ . | title | quote }}
+                {{- end }}
+        
+        - expect something like this:
+            # Source: mychart/templates/configmap.yaml
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+            name: goodly-guppy-configmap
+            data:
+            myvalue: "Hello World"
+            drink: "coffee"
+            food: "PIZZA"
+
+            mug: "true"
+
+            toppings: |-
+                - "Mushrooms"
+                - "Cheese"
+                - "Peppers"
+                - "Onions"
+
